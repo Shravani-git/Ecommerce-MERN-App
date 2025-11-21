@@ -12,7 +12,7 @@ const authMiddleware = require('./middleware/auth'); // explicit object
 const app = express();
 
 app.use(cors({
-  origin: ['https://your-netlify-site.netlify.app', 'http://localhost:5173'], 
+  origin: ['https://satvajewels.vercel.app', 'http://localhost:5173'], 
   credentials: true,
 }));
 app.use(express.json());

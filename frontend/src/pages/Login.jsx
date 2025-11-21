@@ -38,7 +38,7 @@ export default function Login() {
         <div className="p-8 md:p-12 flex flex-col justify-center h-full">
           <h1 className="text-3xl font-extrabold mb-3">Welcome Back!</h1>
           <p className="text-sm text-gray-500 mb-8">
-            Log in now to explore all the features and benefits of our platform and see what's new.
+            Welcome back, shine brighter today.{" "}
           </p>
 
           <form className="space-y-4" onSubmit={onSubmit}>
@@ -55,13 +55,17 @@ export default function Login() {
             </div>
 
             <div>
-              <label className="text-sm text-gray-500">Enter your Password</label>
+              <label className="text-sm text-gray-500">
+                Enter your Password
+              </label>
               <div className="mt-2 relative">
                 <input
                   required
                   type={showPwd ? "text" : "password"}
                   value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  onChange={(e) =>
+                    setForm({ ...form, password: e.target.value })
+                  }
                   placeholder="Password"
                   className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-100 pr-12"
                 />
@@ -96,7 +100,9 @@ export default function Login() {
 
             <p className="text-sm text-gray-500 mt-4">
               Don’t have an account?{" "}
-              <Link to="/register" className="text-orange-500 font-medium">Register Now</Link>
+              <Link to="/register" className="text-orange-500 font-medium">
+                Register Now
+              </Link>
             </p>
           </form>
         </div>

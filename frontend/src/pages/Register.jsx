@@ -29,7 +29,7 @@ export default function Register() {
         <div className="p-8 md:p-12 flex flex-col justify-center h-full">
           <h1 className="text-3xl font-extrabold mb-3">Create Account</h1>
           <p className="text-sm text-gray-500 mb-8">
-            Sign up to start adding favorites, tracking orders and creating wishlists.
+            Start your journey to timeless shine.
           </p>
 
           <form className="space-y-4" onSubmit={onSubmit}>
