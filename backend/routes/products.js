@@ -1,5 +1,6 @@
-// routes/products.js
+// backend/routes/products.js
 const express = require('express');
+const mongoose = require('mongoose');
 const Product = require('../models/Product');
 
 const router = express.Router();
@@ -24,10 +25,34 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /products/:id
+/**
+ * GET /products/categories
+ * returns distinct categories (must be above the '/:id' route)
+ */
+router.get('/categories', async (req, res) => {
+  try {
+    const categories = await Product.distinct('category');
+    res.json({ categories });
+  } catch (err) {
+    console.error('GET /products/categories error:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+/**
+ * GET /products/:id
+ * defensive: validate id first to avoid CastError
+ */
 router.get('/:id', async (req, res) => {
   try {
-    const p = await Product.findById(req.params.id);
+    const { id } = req.params;
+
+    // defensive check: if id is not a valid ObjectId, return 400
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({ message: 'Invalid product id' });
+    }
+
+    const p = await Product.findById(id);
     if (!p) return res.status(404).json({ message: 'Product not found' });
     res.json(p);
   } catch (err) {

@@ -19,7 +19,7 @@ router.post('/register', async (req, res) => {
     const passwordHash = await bcrypt.hash(password, salt);
     const user = await User.create({ email, passwordHash });
 
-    const token = jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' });
+    const token = jwt.sign({ id: user._id, email: user.email }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '15d' });
 
     res.json({ token, user: { id: user._id, email: user.email } });
   } catch (err) {
@@ -47,6 +47,19 @@ router.post('/login', async (req, res) => {
     console.error('Login error:', err);
     res.status(500).json({ message: 'Server error' });
   }
+});
+
+// POST /auth/refresh
+// This endpoint requires a valid token to be sent in the Authorization header.
+// You'll need a middleware to verify the token and attach the user to the request object.
+router.post('/refresh', (req, res) => {
+  // Assuming a middleware has already verified the token and attached the user payload to req.user
+  const userPayload = req.user;
+
+  // Issue a new token with a new expiration date
+  const token = jwt.sign({ id: userPayload.id, email: userPayload.email }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' });
+
+  res.json({ token });
 });
 
 module.exports = router;

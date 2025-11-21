@@ -1,7 +1,7 @@
 import React, { useContext, useState } from "react";
 import { AuthContext } from "../contexts/AuthContext";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import shoe from "../assets/image.png";
+import banner from "../assets/banner.png";
 
 export default function Login() {
   const { login } = useContext(AuthContext);
@@ -27,9 +27,9 @@ export default function Login() {
         <div
           className="hidden md:block bg-gray-900 h-full"
           style={{
-            backgroundImage: `url(${shoe})`,
+            backgroundImage: `url(${banner})`,
             backgroundSize: "cover",
-            backgroundPosition: "center",
+            backgroundPosition: "top",
             minHeight: 520,
           }}
         />

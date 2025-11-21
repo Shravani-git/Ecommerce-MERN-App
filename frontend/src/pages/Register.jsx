@@ -1,7 +1,7 @@
 import React, { useContext, useState } from "react";
 import { AuthContext } from "../contexts/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
-import shoe from "../assets/image.png";
+import banner from "../assets/banner.png";
 
 export default function Register() {
   const { register } = useContext(AuthContext);
@@ -13,7 +13,7 @@ export default function Register() {
   const onSubmit = async (e) => {
     e.preventDefault();
     if (form.password !== form.password2) {
-      alert("Passwords do not match");
+      toast.error("Passwords do not match");
       return;
     }
     setBusy(true);
@@ -99,13 +99,13 @@ export default function Register() {
 
         {/* Right image */}
         <div
-          className="hidden md:block h-full"
-          style={{
-            backgroundImage: `url(${shoe})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            minHeight: 520,
-          }}
+          className="hidden md:block bg-gray-900 h-full"
+                    style={{
+                      backgroundImage: `url(${banner})`,
+                      backgroundSize: "cover",
+                      backgroundPosition: "top",
+                      minHeight: 520,
+                    }}
         />
       </div>
     </div>

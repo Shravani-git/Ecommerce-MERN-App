@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import api from '../api';
 import { AuthContext } from './AuthContext';
 
@@ -10,51 +10,94 @@ export function CartProvider({ children }) {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
 
-  const fetchCart = async () => {
-  // 🛑 1. Skip API call if no token
-  if (!token) {
-    console.log("fetchCart: no token — skipping cart load");
-    setItems([]);
-    setTotal(0);
-    return;
-  }
+  // small token expiry helper (kept local to avoid circular import)
+  const isTokenExpiredLocal = (t) => {
+    if (!t) return true;
+    try {
+      const payload = JSON.parse(atob(t.split('.')[1]));
+      if (!payload || !payload.exp) return true;
+      return Date.now() > payload.exp * 1000;
+    } catch {
+      return true;
+    }
+  };
 
-  console.log("fetchCart: token found, calling /cart");
+  // helper to check if axios has the auth header set
+  const authHeaderPresent = () => !!(api.defaults && api.defaults.headers && api.defaults.headers.common && api.defaults.headers.common['Authorization']);
 
-  setLoading(true);
-  try {
-    const res = await api.get("/cart");
-    console.log("fetchCart: success", res.data);
-
-    setItems(res.data.items || []);
-    setTotal(res.data.total || 0);
-  } catch (err) {
-    console.error("fetchCart error:", err);
-
-    // If backend returns 401 (token invalid / expired)
-    if (err?.response?.status === 401) {
-      console.warn("fetchCart: 401 Unauthorized — token invalid/expired");
-      // you can optionally logout() here
+  // fetch cart - wrapped in useCallback so identity is stable across renders
+  const fetchCart = useCallback(async () => {
+    // If there's no token, skip
+    if (!token) {
+      console.log('fetchCart: no token — skipping cart load');
       setItems([]);
       setTotal(0);
+      return { ok: true, items: [], total: 0 };
     }
 
-    // If backend returns 500, log it so we can fix server
-    if (err?.response?.status === 500) {
-      console.error("Server crashed while fetching cart — check backend logs");
+    // If token exists but is expired, skip and let AuthContext handle logout+toast
+    if (isTokenExpiredLocal(token)) {
+      console.log('fetchCart: token expired — skipping cart load');
+      setItems([]);
+      setTotal(0);
+      return { ok: false, error: 'token_expired' };
     }
-  } finally {
-    setLoading(false);
-  }
-};
 
+    // small guard: wait a short time if axios header not yet attached (race safety)
+    if (!authHeaderPresent()) {
+      let waited = 0;
+      while (!authHeaderPresent() && waited < 300) {
+        // eslint-disable-next-line no-await-in-loop
+        await new Promise((r) => setTimeout(r, 50));
+        waited += 50;
+      }
+      console.log('fetchCart: waited', waited, 'ms for auth header');
 
-  useEffect(() => {
-    fetchCart();
-    // eslint-disable-next-line
+      // if header still not present, abort to avoid spamming requests that will 401
+      if (!authHeaderPresent()) {
+        console.warn('fetchCart: auth header still missing after wait — aborting fetchCart');
+        setItems([]);
+        setTotal(0);
+        return { ok: false, error: 'no_auth_header' };
+      }
+    }
+
+    setLoading(true);
+    let mounted = true;
+    try {
+      const res = await api.get('/cart');
+      if (mounted) {
+        setItems(res.data.items || []);
+        setTotal(res.data.total || 0);
+      }
+      return { ok: true, items: res.data.items || [], total: res.data.total || 0 };
+    } catch (err) {
+      console.error('fetchCart error', err);
+      if (err?.response?.status === 401) {
+        console.warn('fetchCart: 401 Unauthorized — likely token expired');
+        setItems([]);
+        setTotal(0);
+        return { ok: false, error: 'unauthorized' };
+      }
+      return { ok: false, error: err };
+    } finally {
+      if (mounted) setLoading(false);
+    }
   }, [token]);
 
-  const addToCart = async (productId, quantity = 1) => {
+  // effect to call fetchCart when token changes
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      // small microtask delay to let auth setup (only if needed); not usually required
+      await new Promise((r) => setTimeout(r, 0));
+      if (!cancelled) await fetchCart();
+    })();
+
+    return () => { cancelled = true; };
+  }, [token, fetchCart]);
+
+  const addToCart = useCallback(async (productId, quantity = 1) => {
     try {
       await api.post('/cart', { productId, quantity });
       await fetchCart();
@@ -63,25 +106,29 @@ export function CartProvider({ children }) {
       console.error('addToCart error', err);
       return { ok: false, error: err };
     }
-  };
+  }, [fetchCart]);
 
-  const updateQuantity = async (cartItemId, quantity) => {
+  const updateQuantity = useCallback(async (cartItemId, quantity) => {
     try {
       await api.put(`/cart/${cartItemId}`, { quantity });
       await fetchCart();
+      return { ok: true };
     } catch (err) {
       console.error('updateQuantity error', err);
+      return { ok: false, error: err };
     }
-  };
+  }, [fetchCart]);
 
-  const removeItem = async (cartItemId) => {
+  const removeItem = useCallback(async (cartItemId) => {
     try {
       await api.delete(`/cart/${cartItemId}`);
       await fetchCart();
+      return { ok: true };
     } catch (err) {
       console.error('removeItem error', err);
+      return { ok: false, error: err };
     }
-  };
+  }, [fetchCart]);
 
   return (
     <CartContext.Provider value={{ items, total, loading, fetchCart, addToCart, updateQuantity, removeItem }}>

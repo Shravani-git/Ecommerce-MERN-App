@@ -5,7 +5,7 @@ import ProductCard from '../components/ProductCard';
 import CategoryFilter from '../components/CategoryFilter';
 import Pagination from '../components/Pagination';
 import { CartContext } from '../contexts/CartContext';
-
+import { toast, ToastContainer } from 'react-toastify';
 export default function Home() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -16,7 +16,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const { addToCart } = useContext(CartContext);
 
-  const LIMIT = 10;
+  const LIMIT = 9;
 
   const fetchProducts = async (p = page, q = search, c = category) => {
     setLoading(true);
@@ -26,8 +26,8 @@ export default function Home() {
       setPages(res.data.pages || 1);
       setPage(res.data.page || p);
       // extract categories from returned products (if categories not provided separately)
-      const cats = Array.from(new Set((res.data.products || []).map(x => x.category || '').filter(Boolean)));
-      setCategories(cats);
+      //const cats = Array.from(new Set((res.data.products || []).map(x => x.category || '').filter(Boolean)));
+      //setCategories(cats);
     } catch (err) {
       console.error('fetchProducts err', err);
       setProducts([]);
@@ -54,9 +54,22 @@ export default function Home() {
     const res = await addToCart(productId, 1);
     if (!res.ok) {
       // could show toast here
-      alert('Add to cart failed. Make sure you are logged in.');
+      toast.error('Add to cart failed. Make sure you are logged in.');
     }
   };
+  // fetch master categories once
+useEffect(() => {
+  const loadCategories = async () => {
+    try {
+      const res = await api.get('/products/categories');
+      setCategories(res.data.categories || []);
+    } catch (err) {
+      console.error('loadCategories error', err);
+      setCategories([]);
+    }
+  };
+  loadCategories();
+}, []);
 
   return (
     <div className="min-h-screen bg-gray-50">

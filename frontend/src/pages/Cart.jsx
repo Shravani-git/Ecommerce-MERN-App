@@ -1,15 +1,16 @@
 // src/pages/Cart.jsx
-import React, { useContext, useEffect, useState } from 'react';
-import Navbar from '../components/Navbar';
-import CartItem from '../components/CartItem';
-import ProductCard from '../components/ProductCard'; // reuse earlier card
-import Pagination from '../components/Pagination';
-import api from '../api';
-import { CartContext } from '../contexts/CartContext';
-import { AuthContext } from '../contexts/AuthContext';
+import React, { useContext, useEffect, useState } from "react";
+import Navbar from "../components/Navbar";
+import CartItem from "../components/CartItem";
+import ProductCard from "../components/ProductCard"; // reuse earlier card
+import Pagination from "../components/Pagination";
+import api from "../api";
+import { CartContext } from "../contexts/CartContext";
+import { AuthContext } from "../contexts/AuthContext";
 
 export default function CartPage() {
-  const { items, total, loading, fetchCart, updateQuantity, removeItem } = useContext(CartContext);
+  const { items, total, loading, fetchCart, updateQuantity, removeItem } =
+    useContext(CartContext);
   const { user } = useContext(AuthContext);
   const [recommended, setRecommended] = useState([]);
   const [page, setPage] = useState(1);
@@ -20,10 +21,12 @@ export default function CartPage() {
     // fetch recommended products (simple endpoint)
     (async () => {
       try {
-        const res = await api.get('/products', { params: { limit: 3, page: 1 } });
+        const res = await api.get("/products", {
+          params: { limit: 3, page: 1 },
+        });
         setRecommended(res.data.products || []);
       } catch (err) {
-        console.error('recommended load', err);
+        console.error("recommended load", err);
       }
     })();
     // eslint-disable-next-line
@@ -53,20 +56,33 @@ export default function CartPage() {
             <h2 className="text-2xl font-semibold">Your Cart</h2>
 
             {loading ? (
-              <div className="p-6 bg-white rounded shadow text-center">Loading cart...</div>
+              <div className="p-6 bg-white rounded shadow text-center">
+                Loading cart...
+              </div>
             ) : items.length === 0 ? (
-              <div className="p-8 bg-white rounded shadow text-center">Your cart is empty.</div>
+              <div className="p-8 bg-white rounded shadow text-center">
+                Your cart is empty.
+              </div>
             ) : (
-              items.map(it => (
-                <CartItem key={it._id} item={it} onRemove={handleRemove} onUpdateQuantity={handleUpdateQuantity} />
+              items.map((it) => (
+                <CartItem
+                  key={it._id}
+                  item={it}
+                  onRemove={handleRemove}
+                  onUpdateQuantity={handleUpdateQuantity}
+                />
               ))
             )}
 
             {/* Recommended */}
             <div className="mt-10">
-              <h3 className="text-xl font-semibold mb-4 border-t pt-6">Recommended Products</h3>
+              <h3 className="text-xl font-semibold mb-4 border-t pt-6">
+                Recommended Products
+              </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {recommended.map(p => <ProductCard key={p._id} product={p} onAdd={() => {}} />)}
+                {recommended.map((p) => (
+                  <ProductCard key={p._id} product={p} />
+                ))}
               </div>
             </div>
           </div>
@@ -79,13 +95,22 @@ export default function CartPage() {
 
                 <div className="space-y-3">
                   {/* list small rows */}
-                  {items.slice(0, 6).map(it => (
-                    <div key={it._id} className="flex items-center justify-between text-sm">
+                  {items.slice(0, 6).map((it) => (
+                    <div
+                      key={it._id}
+                      className="flex items-center justify-between text-sm"
+                    >
                       <div className="flex-1">
-                        <div className="font-medium">{it.productId?.title || 'Product'}</div>
-                        <div className="text-gray-500 text-xs">x{it.quantity}</div>
+                        <div className="font-medium">
+                          {it.productId?.title || "Product"}
+                        </div>
+                        <div className="text-gray-500 text-xs">
+                          x{it.quantity}
+                        </div>
                       </div>
-                      <div className="font-semibold">₹{(it.productId?.price || 0) * it.quantity}</div>
+                      <div className="font-semibold">
+                        ₹{(it.productId?.price || 0) * it.quantity}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -112,7 +137,9 @@ export default function CartPage() {
 
               <div className="bg-white p-4 rounded-lg shadow">
                 <h5 className="font-semibold mb-2">Need Help?</h5>
-                <p className="text-sm text-gray-600">Contact support or check our returns & delivery policy.</p>
+                <p className="text-sm text-gray-600">
+                  Contact support or check our returns & delivery policy.
+                </p>
               </div>
             </div>
           </aside>

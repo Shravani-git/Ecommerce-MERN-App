@@ -65,17 +65,48 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE /cart/:id
+// router.delete('/:id', async (req, res) => {
+//   try {
+//     const item = await CartItem.findById(req.params.id);
+//     if (!item) return res.status(404).json({ message: 'Cart item not found' });
+//     if (String(item.userId) !== String(req.user.id)) return res.status(403).json({ message: 'Forbidden' });
+//     await item.remove();
+//     res.json({ message: 'Deleted' });
+//   } catch (err) {
+//     console.error('DELETE /cart/:id error:', err);
+//     res.status(500).json({ message: 'Server error' });
+//   }
+// });
+// DELETE /cart/:id  (robust)
 router.delete('/:id', async (req, res) => {
   try {
-    const item = await CartItem.findById(req.params.id);
-    if (!item) return res.status(404).json({ message: 'Cart item not found' });
-    if (String(item.userId) !== String(req.user.id)) return res.status(403).json({ message: 'Forbidden' });
-    await item.remove();
-    res.json({ message: 'Deleted' });
+    const cartItemId = req.params.id;
+    if (!cartItemId) return res.status(400).json({ message: 'Cart item id required' });
+
+    // find the item first to check ownership
+    const item = await CartItem.findById(cartItemId);
+    if (!item) {
+      return res.status(404).json({ message: 'Cart item not found' });
+    }
+
+    // Ensure the logged-in user owns this cart item
+    if (String(item.userId) !== String(req.user?.id)) {
+      return res.status(403).json({ message: 'Forbidden' });
+    }
+
+    // delete atomically
+    const deleted = await CartItem.findOneAndDelete({ _id: cartItemId, userId: req.user.id });
+    if (!deleted) {
+      // this is unlikely because we found it above, but handle just in case
+      return res.status(500).json({ message: 'Failed to delete cart item' });
+    }
+
+    return res.json({ message: 'Deleted' });
   } catch (err) {
     console.error('DELETE /cart/:id error:', err);
     res.status(500).json({ message: 'Server error' });
   }
 });
+
 
 module.exports = router;

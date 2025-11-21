@@ -53,14 +53,14 @@ export default function ProductDetails() {
       // ensure quantity is at least 1
       const res = await addToCart(product._id, qty);
       if (!res.ok) {
-        alert("Could not add to cart — are you logged in?");
+        toast.error("Could not add to cart — are you logged in?");
       } else {
         // small UI feedback
-        alert("Added to cart");
+        toast.success("Added to cart");
       }
     } catch (err) {
       console.error("add to cart", err);
-      alert("Add to cart failed");
+      toast.error("Add to cart failed");
     } finally {
       setAdding(false);
     }
